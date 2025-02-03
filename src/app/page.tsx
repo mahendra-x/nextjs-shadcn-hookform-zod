@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import clsx from "clsx";
 
 const formSchema = z
   .object({
@@ -51,9 +52,11 @@ const formSchema = z
       })
       .min(6, { message: "Password must be at least 6 characters long" }),
 
-    cpassword: z.string({
-      required_error: "Confirm password is required",
-    }),
+    cpassword: z
+      .string({
+        required_error: "Confirm password is required",
+      })
+      .min(6, { message: "Password must be at least 6 characters long" }),
   })
   .refine((data) => data.password === data.cpassword, {
     message: "Passwords do not match",
@@ -76,10 +79,47 @@ export default function Home() {
   const {
     formState: { errors },
   } = form;
+  console.log("form.formState", form.formState);
+  console.log("Dirty field", form.formState.dirtyFields);
+  console.log("touch fields", form.formState.touchedFields);
+  console.log("GET:::", form.formState.isValid);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     alert(JSON.stringify(values));
   }
+
+  const getValidationColor = (
+    fieldName: keyof typeof form.formState.touchedFields
+  ) => {
+    if (
+      form.formState.touchedFields[fieldName] &&
+      !form.formState.errors[fieldName] &&
+      form.formState.dirtyFields[fieldName] &&
+      form.formState.isSubmitted
+    ) {
+      return "text-green-500"; // Valid state
+    } else if (form.formState.errors[fieldName]) {
+      return "text-red-500"; // Error state
+    }
+    return "text-gray-500"; // Default state
+  };
+
+  const getValidationClass = (
+    fieldName: keyof typeof form.formState.touchedFields
+  ) => {
+    if (
+      form.formState.touchedFields[fieldName] &&
+      !form.formState.errors[fieldName] &&
+      form.formState.dirtyFields[fieldName] &&
+      form.formState.isSubmitted
+    ) {
+      return "focus-visible:ring-green-400"; // Valid state
+    } else if (form.formState.errors[fieldName]) {
+      return "focus-visible:ring-red-400"; // Error state
+    }
+    return "focus-visible:ring-gray-800"; // Default state
+  };
+
   return (
     <div className="flex flex-col justify-center items-center min-h-screen justify-self-center bg-white rounded-lg shadow-md p-8">
       {/* <h1 className="text-3xl font-bold text-gray-800 w-max">Hello NextJs</h1> */}
@@ -101,7 +141,11 @@ export default function Home() {
               <FormItem>
                 <FormLabel>Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="shadcn" {...field} />
+                  <Input
+                    placeholder="shadcn"
+                    {...field}
+                    className={clsx("pr-10", getValidationClass("username"))}
+                  />
                 </FormControl>
                 <FormMessage
                   className={!errors.username ? "text-green-500" : ""}
@@ -117,7 +161,11 @@ export default function Home() {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="shadcn" {...field} />
+                  <Input
+                    placeholder="shadcn"
+                    {...field}
+                    className={clsx("pr-10", getValidationClass("email"))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -134,7 +182,7 @@ export default function Home() {
                   <Input
                     {...field}
                     type={showPassword ? "text" : "password"}
-                    className="pr-10"
+                    className={clsx("pr-10", getValidationClass("password"))}
                   />
                   <Button
                     type="button"
@@ -143,9 +191,19 @@ export default function Home() {
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
                     {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
+                      <EyeOff
+                        className={clsx(
+                          "w-5 h-5",
+                          getValidationColor("password")
+                        )}
+                      />
                     ) : (
-                      <Eye className="w-5 h-5" />
+                      <Eye
+                        className={clsx(
+                          "w-5 h-5",
+                          getValidationColor("password")
+                        )}
+                      />
                     )}
                   </Button>
                 </div>
@@ -165,7 +223,18 @@ export default function Home() {
                   <Input
                     {...field}
                     type={showConfirmPassword ? "text" : "password"}
-                    className="pr-10"
+                    className={clsx(
+                      "pr-10 ", // Default border color
+                      // form.formState.touchedFields.cpassword &&
+                      //   !form.formState.errors.cpassword &&
+                      //   form.formState.dirtyFields.cpassword &&
+                      //   form.formState.isSubmitted
+                      //   ? "focus-visible:ring-green-400"
+                      //   : form.formState.errors.cpassword
+                      //   ? "focus-visible:ring-red-400"
+                      //   : "focus-visible:ring-gray-800" // Keep default border when untouched
+                      getValidationClass("cpassword")
+                    )}
                   />
                   <Button
                     type="button"
@@ -174,9 +243,19 @@ export default function Home() {
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
+                      <EyeOff
+                        className={clsx(
+                          "w-5 h-5",
+                          getValidationColor("cpassword")
+                        )}
+                      />
                     ) : (
-                      <Eye className="w-5 h-5" />
+                      <Eye
+                        className={clsx(
+                          "w-5 h-5",
+                          getValidationColor("cpassword")
+                        )}
+                      />
                     )}
                   </Button>
                 </div>
@@ -185,6 +264,13 @@ export default function Home() {
               </FormItem>
             )}
           />
+
+          {form.watch("password") &&
+            form.watch("cpassword") &&
+            !form.formState.errors.cpassword &&
+            form.watch("password") === form.watch("cpassword") && (
+              <p className="text-green-600 text-sm">✅ Password Matched</p>
+            )}
 
           <Button type="submit">Submit</Button>
         </form>
