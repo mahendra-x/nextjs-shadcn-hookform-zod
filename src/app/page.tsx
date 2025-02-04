@@ -235,7 +235,7 @@ export default function Home() {
                       getValidationClass("cpassword")
                     )}
                   />
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="ghost"
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-transparent"
@@ -256,7 +256,7 @@ export default function Home() {
                         )}
                       />
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
 
                 <FormMessage />
